@@ -24,10 +24,9 @@ import org.jbox2d.dynamics.FixtureDef;
 public class BreakoutApp extends GameApplication {
 
     private Assets assets;
-
     private PhysicsEntity bat, ball;
-
     private IntegerProperty score = new SimpleIntegerProperty();
+    private IntegerProperty life = new SimpleIntegerProperty();
 
     public static void main(String[] args) {
         launch(args);
@@ -36,7 +35,7 @@ public class BreakoutApp extends GameApplication {
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("Breakout");
-        settings.setVersion("1.0");
+        settings.setVersion("1.1");
         settings.setHeight(800);
         settings.setWidth(640);
         settings.setIntroEnabled(false);
@@ -51,7 +50,7 @@ public class BreakoutApp extends GameApplication {
     @Override
     protected void initGame() {
         physicsManager.setGravity(0, 0); // removing gravity from physics world
-
+        life.set(3);
         initScreenBounds();
         initBat();
         initBall();
@@ -77,6 +76,7 @@ public class BreakoutApp extends GameApplication {
             @Override
             public void onCollisionBegin(Entity a, Entity b) {
                 score.set(score.get() - 1000);
+                life.set(life.get() - 1);
             }
 
             @Override
@@ -134,7 +134,7 @@ public class BreakoutApp extends GameApplication {
 
         addEntities(ball);         // addEntities adds to the rendering list
 
-        ball.setLinearVelocity(5, -5);
+        ball.setLinearVelocity(8, -8);
     }
 
     private void initBricks() {
@@ -153,12 +153,28 @@ public class BreakoutApp extends GameApplication {
     @Override
     protected void initUI(Pane uiRoot) {
         Text scoreText = new Text();
+        Text life = new Text();
+        Text msg = new Text();
+
+        msg.setTranslateX(getWidth() / 2 - 8);
+        msg.setTranslateY(30);
+        //msg.setTranslateY(20);
+        msg.setFont(Font.font(18));
+        msg.setText("Life");
+
+        life.setTranslateY(50);
+        life.setTranslateX(getWidth() / 2);
+        life.setFont(Font.font(18));
+        life.textProperty().bind(this.life.asString());
+
         scoreText.setTranslateY(50);
         scoreText.setFont(Font.font(18));
         scoreText.textProperty().bind(score.asString());
         //scoreText.setText("SCORE:");
 
         uiRoot.getChildren().add(scoreText);
+        uiRoot.getChildren().add(life);
+        uiRoot.getChildren().add(msg);
     }
 
     @Override
@@ -176,11 +192,13 @@ public class BreakoutApp extends GameApplication {
         bat.setLinearVelocity(0, 0);
 
         Point2D v = ball.getLinearVelocity();
-        if (Math.abs(v.getY()) < 5) {
+        if (Math.abs(v.getY()) < 8) {
             double x = v.getX();
             double signY = Math.signum(v.getY());
-            ball.setLinearVelocity(x, signY * 5);
+            ball.setLinearVelocity(x, signY * 8);
         }
+        if (life.get() <= 0)
+            System.exit(1);
     }
 
     private enum Type implements EntityType {BAT, BALL, BRICK, SCREEN}
